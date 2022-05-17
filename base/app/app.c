@@ -26,7 +26,7 @@ app_init(void)
 }
 
 void
-app_run(void)
+app_task(void)
 {
   event_dispatcher_dispatch();
 }

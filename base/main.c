@@ -24,6 +24,6 @@ main()
   while(1)
   {
     tud_task();
-    app_run();
+    app_task();
   }
 }

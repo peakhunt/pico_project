@@ -5,6 +5,8 @@
 #include "mainloop_timer.h"
 #include "sys_timer.h"
 #include "misc.h"
+#include "shell.h"
+#include "shell_if_usb.h"
 
 void
 app_init(void)
@@ -17,6 +19,8 @@ app_init(void)
   sys_timer_init();
 
   misc_init();
+
+  shell_init();
 
   __enable_irq();
 }

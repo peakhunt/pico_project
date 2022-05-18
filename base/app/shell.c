@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "hardware/pll.h"
+#include "hardware/clocks.h"
+#include "hardware/structs/pll.h"
+#include "hardware/structs/clocks.h"
+
 #include "app_common.h"
 #include "shell.h"
 #include "shell_if_usb.h"
@@ -36,27 +41,8 @@ typedef struct
 static void shell_command_help(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_version(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_uptime(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_clock(ShellIntf* intf, int argc, const char** argv);
 
-static void shell_command_gpio_out(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_gpio_in(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_pwm(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_adc(ShellIntf* intf, int argc, const char** argv);
-
-static void shell_command_start(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_stop(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_status(ShellIntf* intf, int argc, const char** argv);
-
-static void shell_command_glow(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_oil(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_fan(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_set_oil_pump_freq(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_set_fan_power(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_settings(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_mod(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_save(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_reset(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_step(ShellIntf* intf, int argc, const char** argv);
-static void shell_command_set(ShellIntf* intf, int argc, const char** argv);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -86,6 +72,11 @@ static const ShellCommand     _commands[] =
     "uptime",
     "show system uptime",
     shell_command_uptime,
+  },
+  {
+    "clock",
+    "show system clock info",
+    shell_command_clock,
   },
 };
 
@@ -132,6 +123,43 @@ shell_command_uptime(ShellIntf* intf, int argc, const char** argv)
 {
   shell_printf(intf, "\r\n");
   shell_printf(intf, "System Uptime: %lu\r\n", __uptime);
+}
+
+static void
+shell_command_clock(ShellIntf* intf, int argc, const char** argv)
+{
+  shell_printf(intf, "\r\n");
+
+  uint f_pll_sys = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_SYS_CLKSRC_PRIMARY);
+  uint f_pll_usb = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_PLL_USB_CLKSRC_PRIMARY);
+  uint f_rosc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_ROSC_CLKSRC);
+  uint f_clk_sys = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_SYS);
+  uint f_clk_peri = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_PERI);
+  uint f_clk_usb = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_USB);
+  uint f_clk_adc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_ADC);
+  uint f_clk_rtc = frequency_count_khz(CLOCKS_FC0_SRC_VALUE_CLK_RTC);
+
+  shell_printf(intf, "F_PLL_SYS   = %dKHz\r\n", f_pll_sys);
+  shell_printf(intf, "F_PLL_USB   = %dKHz\r\n", f_pll_usb);
+  shell_printf(intf, "F_ROSC      = %dKHz\r\n", f_rosc);
+  shell_printf(intf, "F_CLK_SYS   = %dKHz\r\n", f_clk_sys);
+  shell_printf(intf, "F_CLK_PERI  = %dKHz\r\n", f_clk_peri);
+  shell_printf(intf, "F_CLK_USB   = %dKHz\r\n", f_clk_usb);
+  shell_printf(intf, "F_CLK_ADC   = %dKHz\r\n", f_clk_adc);
+  shell_printf(intf, "F_CLK_RTC   = %dKHz\r\n", f_clk_rtc);
+
+  shell_printf(intf, "\r\n");
+
+  shell_printf(intf, "clk_gpout0  = %dKHz\r\n", clock_get_hz(clk_gpout0) / 1000);
+  shell_printf(intf, "clk_gpout1  = %dKHz\r\n", clock_get_hz(clk_gpout1) / 1000);
+  shell_printf(intf, "clk_gpout2  = %dKHz\r\n", clock_get_hz(clk_gpout2) / 1000);
+  shell_printf(intf, "clk_gpout3  = %dKHz\r\n", clock_get_hz(clk_gpout3) / 1000);
+  shell_printf(intf, "clk_ref     = %dKHz\r\n", clock_get_hz(clk_ref) / 1000);
+  shell_printf(intf, "clk_sys     = %dKHz\r\n", clock_get_hz(clk_sys) / 1000);
+  shell_printf(intf, "clk_peri    = %dKHz\r\n", clock_get_hz(clk_peri) / 1000);
+  shell_printf(intf, "clk_usb     = %dKHz\r\n", clock_get_hz(clk_usb) / 1000);
+  shell_printf(intf, "clk_adc     = %dKHz\r\n", clock_get_hz(clk_adc) / 1000);
+  shell_printf(intf, "clk_rtc     = %dKHz\r\n", clock_get_hz(clk_rtc) / 1000);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

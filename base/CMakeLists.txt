@@ -17,6 +17,7 @@ add_executable(base
     app/mainloop_timer.c
     app/soft_timer.c
     app/sys_timer.c
+    app/ws2812.c
     app/misc.c
     app/circ_buffer.c
     app/shell.c
@@ -24,6 +25,8 @@ add_executable(base
 )
 
 pico_generate_pio_header(base ${CMAKE_CURRENT_LIST_DIR}/app/led.pio)
+pico_generate_pio_header(base ${CMAKE_CURRENT_LIST_DIR}/app/ws2812.pio)
+
 
 target_include_directories(base PUBLIC
         ${CMAKE_CURRENT_LIST_DIR})

@@ -1,0 +1,28 @@
+.program led
+
+loop:
+  pull
+  out pins, 1
+  jmp loop
+
+% c-sdk {
+static inline void led_program_init(PIO pio, uint sm, uint offset, uint pin)
+{
+  pio_sm_config c = led_program_get_default_config(offset);
+
+  // map the state machine's OUT pin group to one pin, namely the 'pin' parameter to this function
+  sm_config_set_out_pins(&c, pin, 1);
+
+  // set this pin's GPIO function (connect PIO to the pad)
+  pio_gpio_init(pio, pin);
+
+  // set the pin direction to output at the PIO
+  pio_sm_set_consecutive_pindirs(pio, sm, pin, 1, true);
+
+  // load configuration and jump to the start of the program
+  pio_sm_init(pio, sm, offset, &c);
+
+  // set the state machine running
+  pio_sm_set_enabled(pio, sm, true);
+}
+%}

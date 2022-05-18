@@ -23,6 +23,8 @@ add_executable(base
     app/shell_if_usb.c
 )
 
+pico_generate_pio_header(base ${CMAKE_CURRENT_LIST_DIR}/app/led.pio)
+
 target_include_directories(base PUBLIC
         ${CMAKE_CURRENT_LIST_DIR})
 
@@ -36,4 +38,5 @@ target_link_libraries(base
     cmsis_core
     tinyusb_device
     tinyusb_board
+    hardware_pio
 )

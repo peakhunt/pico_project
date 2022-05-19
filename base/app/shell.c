@@ -14,6 +14,7 @@
 #include "shell.h"
 #include "shell_if_usb.h"
 #include "version.h"
+#include "ws2812.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -22,7 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #define SHELL_MAX_COLUMNS_PER_LINE      128
-#define SHELL_COMMAND_MAX_ARGS          4
+#define SHELL_COMMAND_MAX_ARGS          8
 
 typedef void (*shell_command_handler)(ShellIntf* intf, int argc, const char** argv);
 
@@ -42,6 +43,7 @@ static void shell_command_help(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_version(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_uptime(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_clock(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_ws2812(ShellIntf* intf, int argc, const char** argv);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,6 +79,11 @@ static const ShellCommand     _commands[] =
     "clock",
     "show system clock info",
     shell_command_clock,
+  },
+  {
+    "ws2812",
+    "control ws2812 led",
+    shell_command_ws2812,
   },
 };
 
@@ -160,6 +167,46 @@ shell_command_clock(ShellIntf* intf, int argc, const char** argv)
   shell_printf(intf, "clk_usb     = %dKHz\r\n", clock_get_hz(clk_usb) / 1000);
   shell_printf(intf, "clk_adc     = %dKHz\r\n", clock_get_hz(clk_adc) / 1000);
   shell_printf(intf, "clk_rtc     = %dKHz\r\n", clock_get_hz(clk_rtc) / 1000);
+}
+
+static void
+shell_command_ws2812(ShellIntf* intf, int argc, const char** argv)
+{
+  shell_printf(intf, "\r\n");
+
+  if(argc != 5)
+  {
+    goto invalid_cmd;
+  }
+
+  uint32_t ndx = atoi(argv[1]);
+
+  if(ndx >= WS2812_NUM_LEDS)
+  {
+    goto invalid_cmd;
+  }
+
+  uint8_t   r, g, b;
+  uint32_t  color;
+
+  r = (uint8_t)atoi(argv[2]);
+  g = (uint8_t)atoi(argv[3]);
+  b = (uint8_t)atoi(argv[4]);
+
+  color = ((uint32_t)(r) << 8) |
+          ((uint32_t)(g) << 16) |
+          (uint32_t)(b);
+
+  color = color << 8;
+
+  ws2812_set_led(ndx, color);
+
+  shell_printf(intf, "set %d to %d:%d:%d\r\n", ndx, r,g,b);
+  return;
+
+invalid_cmd:
+  shell_printf(intf, "syntax error\r\n");
+  shell_printf(intf, "%s [index 0-%d] r g b\r\n", WS2812_NUM_LEDS -1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

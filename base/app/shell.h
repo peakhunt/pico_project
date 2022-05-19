@@ -4,8 +4,8 @@
 #include "app_common.h"
 #include "list.h"
 
-#define CLI_RX_BUFFER_LENGTH            64
-#define SHELL_MAX_COMMAND_LEN           64
+#define CLI_RX_BUFFER_LENGTH            128
+#define SHELL_MAX_COMMAND_LEN           128
 
 
 typedef struct __shell_intf ShellIntf;

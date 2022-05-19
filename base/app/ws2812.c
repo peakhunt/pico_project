@@ -8,7 +8,7 @@
 #include "mainloop_timer.h"
 #include "ws2812.h"
 
-#define WS2812_PIN    24
+#define WS2812_PIN    22
 #define IS_RGBW       false
 
 #define WS2812_UPDATE_INTERVAL      100      // 10 Hz
@@ -27,6 +27,10 @@ ws2812_update(SoftTimerElem* te)
   memcpy(_led_mem_dma, _led_mem, sizeof(_led_mem));
 
   // FIXME update via DMA
+  for(int i = 0; i < WS2812_NUM_LEDS; i++)
+  {
+    pio_sm_put_blocking(pio, 0, _led_mem_dma[i]);
+  }
 
   mainloop_timer_schedule(&_update_tmr, WS2812_UPDATE_INTERVAL);
 }

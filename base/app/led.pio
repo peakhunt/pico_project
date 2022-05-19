@@ -1,8 +1,8 @@
 .program led
 
 loop:
-  pull
-  out pins, 1
+  pull                ; pull 32bit from fifo into OSR. or stall if fifo is empty
+  out pins, 1         ; out LSB 1 bit into pins
   jmp loop
 
 % c-sdk {

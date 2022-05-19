@@ -2,16 +2,20 @@
 
 #include "pico/stdlib.h"
 #include "hardware/pio.h"
+#include "hardware/dma.h"
+#include "hardware/irq.h"
 #include "ws2812.pio.h"
 
 #include "soft_timer.h"
 #include "mainloop_timer.h"
 #include "ws2812.h"
 
+#define LED_SIMULATE    1
+
 #define WS2812_PIN    22
 #define IS_RGBW       false
 
-#define WS2812_UPDATE_INTERVAL      100      // 10 Hz
+#define WS2812_UPDATE_INTERVAL      50      // 20 Hz
 
 static PIO pio = pio1;
 static uint sm;
@@ -21,18 +25,47 @@ static uint32_t   _led_mem_dma[WS2812_NUM_LEDS];
 
 static SoftTimerElem  _update_tmr;
 
+static int _dma_chan;
+
 static void
 ws2812_update(SoftTimerElem* te)
 {
-  memcpy(_led_mem_dma, _led_mem, sizeof(_led_mem));
+#ifdef LED_SIMULATE
+  uint32_t last = _led_mem[WS2812_NUM_LEDS - 2];
 
-  // FIXME update via DMA
+  memcpy(&_led_mem_dma[1], _led_mem, sizeof(uint32_t) * (WS2812_NUM_LEDS - 1));
+  _led_mem_dma[0] = last;
+
+  memcpy(_led_mem, _led_mem_dma, sizeof(_led_mem));
+#else
+  memcpy(_led_mem_dma, _led_mem, sizeof(_led_mem));
+#endif
+
+#if 0
   for(int i = 0; i < WS2812_NUM_LEDS; i++)
   {
     pio_sm_put_blocking(pio, 0, _led_mem_dma[i]);
   }
+#else
+  //
+  // FIXME a simple mechanism to avoid DMA transfer if it's already in progress.
+  // realistically it won't happen but it doesn't hurt anyway
+  //
+  dma_channel_set_read_addr(_dma_chan, _led_mem_dma, true);
+#endif
 
   mainloop_timer_schedule(&_update_tmr, WS2812_UPDATE_INTERVAL);
+}
+
+//
+// XXX
+// in IRQ context
+//
+static void
+dma_handler(void)
+{
+  // Clear the interrupt request.
+  dma_hw->ints0 = 1u << _dma_chan;
 }
 
 void
@@ -47,7 +80,37 @@ ws2812_init(void)
   _update_tmr.cb    = ws2812_update;
   mainloop_timer_schedule(&_update_tmr, WS2812_UPDATE_INTERVAL);
 
-  // FIXME DMA init
+#ifdef LED_SIMULATE
+  uint8_t r,g,b;
+  r = 255;
+  g = 0;
+  b = 0;
+  uint32_t color = ((uint32_t)(r) << 8) |
+                   ((uint32_t)(g) << 16) |
+                   (uint32_t)(b);
+  _led_mem[0] = color << 8;
+#endif
+
+  // DMA init
+  _dma_chan = dma_claim_unused_channel(true);
+  dma_channel_config c = dma_channel_get_default_config(_dma_chan);
+  channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
+  //channel_config_set_read_increment(&c, false);
+  channel_config_set_dreq(&c, DREQ_PIO1_TX0);
+
+  dma_channel_configure(
+      _dma_chan,
+      &c,
+      &pio1_hw->txf[0], // Write address (only need to set this once)
+      NULL,             // Don't provide a read address yet
+      WS2812_NUM_LEDS, 
+      false             // Don't start yet
+  );
+
+  dma_channel_set_irq0_enabled(_dma_chan, true);
+
+  irq_set_exclusive_handler(DMA_IRQ_0, dma_handler);
+  irq_set_enabled(DMA_IRQ_0, true);
 }
 
 void

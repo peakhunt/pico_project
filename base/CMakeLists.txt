@@ -42,4 +42,6 @@ target_link_libraries(base
     tinyusb_device
     tinyusb_board
     hardware_pio
+    hardware_irq
+    hardware_dma
 )

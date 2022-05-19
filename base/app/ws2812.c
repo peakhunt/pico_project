@@ -31,15 +31,16 @@ static void
 ws2812_update(SoftTimerElem* te)
 {
 #ifdef LED_SIMULATE
-  uint32_t last = _led_mem[WS2812_NUM_LEDS - 2];
+  uint32_t last = _led_mem[WS2812_NUM_LEDS - 1];
 
-  memcpy(&_led_mem_dma[1], _led_mem, sizeof(uint32_t) * (WS2812_NUM_LEDS - 1));
-  _led_mem_dma[0] = last;
-
-  memcpy(_led_mem, _led_mem_dma, sizeof(_led_mem));
-#else
-  memcpy(_led_mem_dma, _led_mem, sizeof(_led_mem));
+  for(int i = WS2812_NUM_LEDS - 2; i >= 0; i--)
+  {
+    _led_mem[i + 1] = _led_mem[i];
+  }
+  _led_mem[0] = last;
 #endif
+
+  memcpy(_led_mem_dma, _led_mem, sizeof(_led_mem));
 
 #if 0
   for(int i = 0; i < WS2812_NUM_LEDS; i++)
@@ -79,17 +80,6 @@ ws2812_init(void)
   soft_timer_init_elem(&_update_tmr);
   _update_tmr.cb    = ws2812_update;
   mainloop_timer_schedule(&_update_tmr, WS2812_UPDATE_INTERVAL);
-
-#ifdef LED_SIMULATE
-  uint8_t r,g,b;
-  r = 255;
-  g = 0;
-  b = 0;
-  uint32_t color = ((uint32_t)(r) << 8) |
-                   ((uint32_t)(g) << 16) |
-                   (uint32_t)(b);
-  _led_mem[0] = color << 8;
-#endif
 
   // DMA init
   _dma_chan = dma_claim_unused_channel(true);

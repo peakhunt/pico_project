@@ -85,7 +85,8 @@ ws2812_init(void)
   _dma_chan = dma_claim_unused_channel(true);
   dma_channel_config c = dma_channel_get_default_config(_dma_chan);
   channel_config_set_transfer_data_size(&c, DMA_SIZE_32);
-  //channel_config_set_read_increment(&c, false);
+  channel_config_set_read_increment(&c, true);
+  channel_config_set_write_increment(&c, false);
   channel_config_set_dreq(&c, DREQ_PIO1_TX0);
 
   dma_channel_configure(

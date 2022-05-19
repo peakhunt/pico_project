@@ -174,39 +174,64 @@ shell_command_ws2812(ShellIntf* intf, int argc, const char** argv)
 {
   shell_printf(intf, "\r\n");
 
-  if(argc != 5)
+  if(argc < 2)
   {
     goto invalid_cmd;
   }
 
-  uint32_t ndx = atoi(argv[1]);
+  if(strcmp(argv[1], "color") == 0)
+  {
+    if(argc != 6)
+    {
+      goto invalid_cmd;
+    }
 
-  if(ndx >= WS2812_NUM_LEDS)
+    uint32_t ndx = atoi(argv[2]);
+
+    if(ndx >= WS2812_NUM_LEDS)
+    {
+      goto invalid_cmd;
+    }
+
+    uint8_t   r, g, b;
+    uint32_t  color;
+
+    r = (uint8_t)atoi(argv[3]);
+    g = (uint8_t)atoi(argv[4]);
+    b = (uint8_t)atoi(argv[5]);
+
+    color = ((uint32_t)(r) << 8) |
+            ((uint32_t)(g) << 16) |
+            (uint32_t)(b);
+
+    color = color << 8;
+
+    ws2812_set_led(ndx, color);
+
+    shell_printf(intf, "set %d to %d:%d:%d\r\n", ndx, r,g,b);
+  }
+  else if(strcmp(argv[1], "rotate") == 0)
+  {
+    if(argc != 3)
+    {
+      goto invalid_cmd;
+    }
+
+    uint8_t tf = atoi(argv[2]);
+
+    ws2812_set_rotate(tf);
+    shell_printf(intf, "set rotated to %d\r\n", tf);
+  }
+  else
   {
     goto invalid_cmd;
   }
-
-  uint8_t   r, g, b;
-  uint32_t  color;
-
-  r = (uint8_t)atoi(argv[2]);
-  g = (uint8_t)atoi(argv[3]);
-  b = (uint8_t)atoi(argv[4]);
-
-  color = ((uint32_t)(r) << 8) |
-          ((uint32_t)(g) << 16) |
-          (uint32_t)(b);
-
-  color = color << 8;
-
-  ws2812_set_led(ndx, color);
-
-  shell_printf(intf, "set %d to %d:%d:%d\r\n", ndx, r,g,b);
   return;
 
 invalid_cmd:
   shell_printf(intf, "syntax error\r\n");
-  shell_printf(intf, "%s [index 0-%d] r g b\r\n", WS2812_NUM_LEDS -1);
+  shell_printf(intf, "%s color [index 0-%d] r g b\r\n", argv[0], WS2812_NUM_LEDS -1);
+  shell_printf(intf, "%s rotate 0|1\r\n", argv[0]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

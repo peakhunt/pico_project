@@ -10,8 +10,6 @@
 #include "mainloop_timer.h"
 #include "ws2812.h"
 
-#define LED_SIMULATE    1
-
 #define WS2812_PIN    22
 #define IS_RGBW       false
 
@@ -26,19 +24,21 @@ static uint32_t   _led_mem_dma[WS2812_NUM_LEDS];
 static SoftTimerElem  _update_tmr;
 
 static int _dma_chan;
+static bool _rotate = false;
 
 static void
 ws2812_update(SoftTimerElem* te)
 {
-#ifdef LED_SIMULATE
-  uint32_t last = _led_mem[WS2812_NUM_LEDS - 1];
-
-  for(int i = WS2812_NUM_LEDS - 2; i >= 0; i--)
+  if (_rotate)
   {
-    _led_mem[i + 1] = _led_mem[i];
+    uint32_t last = _led_mem[WS2812_NUM_LEDS - 1];
+
+    for(int i = WS2812_NUM_LEDS - 2; i >= 0; i--)
+    {
+      _led_mem[i + 1] = _led_mem[i];
+    }
+    _led_mem[0] = last;
   }
-  _led_mem[0] = last;
-#endif
 
   memcpy(_led_mem_dma, _led_mem, sizeof(_led_mem));
 
@@ -107,4 +107,10 @@ void
 ws2812_set_led(uint32_t ndx, uint32_t value)
 {
   _led_mem[ndx] = value;
+}
+
+void
+ws2812_set_rotate(bool tf)
+{
+  _rotate = tf;
 }

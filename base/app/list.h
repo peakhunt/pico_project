@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 //
 // very generic list data structure.
-// ported from linux kernel for application usage by Intellian technologies
+// ported from linux kernel for application usage
 //
 // - hkim - 
 //

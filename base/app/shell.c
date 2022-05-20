@@ -13,6 +13,7 @@
 #include "app_common.h"
 #include "shell.h"
 #include "shell_if_usb.h"
+#include "shell_if_uart.h"
 #include "version.h"
 #include "ws2812.h"
 
@@ -302,6 +303,7 @@ void
 shell_init(void)
 {
   shell_if_usb_init();
+  shell_if_uart_init();
 }
 
 void

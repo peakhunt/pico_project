@@ -22,6 +22,7 @@ add_executable(base
     app/circ_buffer.c
     app/shell.c
     app/shell_if_usb.c
+    app/shell_if_uart.c
 )
 
 pico_generate_pio_header(base ${CMAKE_CURRENT_LIST_DIR}/app/led.pio)
@@ -44,4 +45,5 @@ target_link_libraries(base
     hardware_pio
     hardware_irq
     hardware_dma
+    hardware_uart
 )
